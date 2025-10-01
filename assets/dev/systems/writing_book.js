@@ -1,0 +1,1 @@
+full contents of assets/dev/systems/writing_book.js

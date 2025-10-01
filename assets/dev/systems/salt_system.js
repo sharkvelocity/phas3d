@@ -1,0 +1,1 @@
+full contents of assets/dev/systems/salt_system.js

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhasmaPhoney</title>
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.3.1",
+    "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/"
+  }
+}
+</script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            height: 100vh; 
+            width: 100vw; 
+            background: #000; 
+        }
+        #renderCanvas { 
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%; 
+            height: 100%; 
+            touch-action: none; 
+            outline: none; 
+            z-index: 1;
+        }
+        .ui-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+        .ui-modal { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); pointer-events: auto; }
+        .toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .toast { background: rgba(0, 200, 255, 0.8); color: #000; padding: 10px 20px; border-radius: 20px; font-family: sans-serif; font-size: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .action-bar { position: fixed; bottom: 84px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px solid rgba(0,255,255,0.1); }
+        .action-btn { background: rgba(0,0,0,0.5); border: 1px solid #088; color: #0ff; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 18px; cursor: pointer; transition: all 0.2s; }
+        .action-btn:hover { background: rgba(0, 255, 255, 0.2); border-color: #0ff; }
+        .item-belt { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; align-items: flex-end; gap: 8px; height: 64px; }
+        .belt-slot { width: 64px; height: 64px; background: rgba(0,0,0,0.4); border: 1px solid #066; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; position: relative; }
+        .belt-slot.active { border-color: #0ff; background: rgba(0, 255, 255, 0.2); box-shadow: 0 0 12px rgba(0,255,255,0.5); }
+        .belt-slot .slot-key { position: absolute; top: 2px; left: 4px; font-size: 10px; color: #0ff; opacity: 0.7; }
+        .belt-slot img { width: 48px; height: 48px; object-fit: contain; }
+        #notebook-modal { display: none; }
+        #devtools-panel { display: none; position: fixed; top: 10px; right: 10px; width: 480px; max-height: 90vh; overflow-y: auto; background: rgba(10,10,10,0.9); border: 1px solid #033; border-radius: 8px; padding: 12px; z-index: 9990; font-family: monospace; font-size: 13px; color: #eee; backdrop-filter: blur(4px); }
+        #devtools-toggle { display: none; position: fixed; top: 10px; right: 10px; z-index: 9991; padding: 4px 8px; background: #234; color: #9cf; border: 1px solid #456; cursor: pointer; border-radius: 4px; }
+        #start-investigation-btn:hover { background-color: #0aa; }
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 10000;
+            display: none; /* JS will manage */
+            flex-direction: column; justify-content: center; align-items: center;
+            color: #0ff; font-family: 'Courier New', monospace;
+            transition: opacity 0.5s ease;
+            opacity: 0;
+        }
+        #loading-text { font-size: 1.5em; text-shadow: 0 0 8px #0ff; }
+        #loading-sub-text { font-size: 0.9em; color: #0aa; margin-top: 8px; height: 1.2em; transition: color 0.3s; }
+        #loading-bar-container {
+            width: 50%; max-width: 600px; height: 20px; margin-top: 20px;
+            border: 1px solid #088; border-radius: 5px; padding: 3px; background: #00000088;
+        }
+        #loading-bar {
+            width: 0%; height: 100%;
+            background: linear-gradient(90deg, #0aa, #0ff);
+            border-radius: 2px;
+            transition: width 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-overlay">
+        <div id="loading-text">Loading...</div>
+        <div id="loading-sub-text"></div>
+        <div id="loading-bar-container">
+            <div id="loading-bar"></div>
+        </div>
+    </div>
+    
+    <div id="fallback-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 0, 0, 0.8); z-index: 10001; flex-direction: column; justify-content: center; align-items: center; color: #f88; font-family: 'Courier New', monospace; text-align: center;">
+        <h2 style="font-size: 2em; text-shadow: 0 0 8px #f00;">Loading Error</h2>
+        <p style="margin: 20px;">The game failed to start properly. This might be a temporary issue.</p>
+        <button id="fallback-refresh-btn" style="padding: 12px 24px; font-size: 1.2em; background: #900; color: #fff; border: 2px solid #f33; border-radius: 8px; cursor: pointer;">
+            Refresh Page
+        </button>
+    </div>
+    
+    <canvas id="renderCanvas"></canvas>
+    
+    <!-- React Journal UI -->
+    <div id="notebook-modal" class="ui-overlay ui-modal" style="display: none; z-index: 9999; overflow-y: auto;">
+      <div id="root"></div> <!-- React app mount point -->
+    </div>
+    
+    <!-- UI overlays will be created by JS -->
+    <div id="devtools-toggle" style="display:none;">DEV</div>
+    <div id="devtools-panel"></div>
+    <div id="ghostdev-toggle" style="display:none;">GHOST</div>
+    <div id="ghostdev-panel"></div>
+
+    <!-- External Libraries -->
+    <script src="https://sharkvelocity.github.io/3d/cdn/babylon.js"></script>
+    <script src="https://sharkvelocity.github.io/3d/cdn/earcut.min.js"></script>
+    <script src="https://sharkvelocity.github.io/3d/cdn/materialsLibrary/babylonjs.materials.min.js"></script>
+    <script src="https://sharkvelocity.github.io/3d/cdn/materialsLibrary/babylon.skyMaterial.min.js"></script>
+    <script src="https://sharkvelocity.github.io/3d/cdn/meshopt_decoder.js"></script>
+    <script src="https://sharkvelocity.github.io/3d/cdn/draco_decoder_gltf.js"></script>
+    <script src="https://sharkvelocity.github.io/3d/cdn/loaders/babylonjs.loaders.min.js"></script>
+    <script src="https://sharkvelocity.github.io/3d/cdn/gui/babylon.gui.min.js"></script>
+    <script src="https://sharkvelocity.github.io/3d/cdn/inspector/babylon.inspector.bundle.js"></script>
+    <script src="https://sharkvelocity.github.io/3d/cdn/cannon.js"></script>
+    
+    <!-- Core Config & Data -->
+    <script src="./assets/dev/util/pp_runtime.js"></script>
+    <script src="./assets/dev/util/modular_settings.js"></script>
+    <script src="./assets/dev/game/ghost_data.js"></script>
+    <script src="./assets/dev/game/ghost_logic.js"></script>
+    <script src="./assets/dev/game/map_loader.js"></script>
+
+    <!-- Core Systems -->
+    <script src="./assets/dev/util/pointer_lock_manager.js"></script>
+    <script src="./assets/dev/util/input_manager.js"></script>
+    <script src="./assets/dev/util/env_and_sound.js"></script>
+    <script src="./assets/models/map/map_manager.js"></script>
+    <script src="./assets/dev/util/player_rig_controller.js"></script>
+    <script src="./assets/dev/util/moon.js"></script>
+
+    <!-- UI Systems -->
+    <script src="./assets/dev/ui/reticle.js"></script>
+    <script src="./assets/dev/ui/hud_ui.js"></script>
+    <script src="./assets/dev/ui/belt_manager.js"></script>
+    <script src="./assets/dev/ui/notebook_ui.js"></script>
+    <script type="module" src="./journal/index.js"></script>
+    <script src="./assets/dev/ui/van_ui.js"></script>
+    <script src="./assets/dev/util/minimap_northup_xyz.js"></script>
+
+    <!-- Item & Evidence Systems -->
+    <script src="./assets/dev/game/inventory_system.js"></script>
+    <script src="./assets/dev/systems/salt_system.js"></script>
+    <script src="./assets/dev/systems/writing_book.js"></script>
+    <script src="./assets/dev/systems/uv_prints.js"></script>
+    <script src="./assets/dev/game/lighter.js"></script>
+    <script src="./assets/dev/game/lantern.js"></script>
+    <script src="./assets/dev/tools/dots_system.js"></script>
+    <script src="./assets/dev/tools/emf.js"></script>
+    <script src="./assets/dev/tools/spirit_box.js"></script>
+    <script src="./assets/dev/tools/parabolic_mic.js"></script>
+    <script src="./assets/dev/effects/effects_sanity_med.js"></script>
+
+    <!-- Dev Tools (load before bootstrap, after systems) -->
+    <script src="./assets/dev/util/ghost_cam.js"></script>
+    <script src="./assets/dev/tools/devtools.js"></script>
+    <script src="./assets/dev/tools/ghost_dev.js"></script>
+    <script src="./assets/dev/tools/logger.js"></script>
+
+    <!-- Map Generation & Patches -->
+    <script src="./phasma_map_and_ghost.js"></script>
+    <script src="./assets/dev/util/gameplay_patch.js"></script>
+
+    <!-- Game Entry Point (MUST BE LAST) -->
+    <script src="./assets/dev/game/bootstrap.js"></script>
+
+</body>
+</html>

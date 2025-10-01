@@ -1,0 +1,1 @@
+full contents of assets/dev/ui/van_ui.js

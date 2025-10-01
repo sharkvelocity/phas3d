@@ -1,0 +1,1 @@
+full contents of assets/dev/tools/spirit_box.js

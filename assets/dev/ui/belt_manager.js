@@ -1,0 +1,1 @@
+full contents of assets/dev/ui/belt_manager.js
