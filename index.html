@@ -4,15 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PhasmaPhoney</title>
-    <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@18.3.1",
-    "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/"
-  }
-}
-</script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body, html { 
@@ -71,6 +62,14 @@
             transition: width 0.3s ease-out;
         }
     </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/"
+  }
+}
+</script>
 </head>
 <body>
     <div id="loading-overlay">
@@ -91,9 +90,9 @@
     
     <canvas id="renderCanvas"></canvas>
     
-    <!-- React Journal UI -->
+    <!-- Journal UI -->
     <div id="notebook-modal" class="ui-overlay ui-modal" style="display: none; z-index: 9999; overflow-y: auto;">
-      <div id="root"></div> <!-- React app mount point -->
+      <!-- Populated by notebook_ui.js -->
     </div>
     
     <!-- UI overlays will be created by JS -->
@@ -103,16 +102,16 @@
     <div id="ghostdev-panel"></div>
 
     <!-- External Libraries -->
-    <script src="https://sharkvelocity.github.io/3d/cdn/babylon.js"></script>
-    <script src="https://sharkvelocity.github.io/3d/cdn/earcut.min.js"></script>
-    <script src="https://sharkvelocity.github.io/3d/cdn/materialsLibrary/babylonjs.materials.min.js"></script>
-    <script src="https://sharkvelocity.github.io/3d/cdn/materialsLibrary/babylon.skyMaterial.min.js"></script>
-    <script src="https://sharkvelocity.github.io/3d/cdn/meshopt_decoder.js"></script>
-    <script src="https://sharkvelocity.github.io/3d/cdn/draco_decoder_gltf.js"></script>
-    <script src="https://sharkvelocity.github.io/3d/cdn/loaders/babylonjs.loaders.min.js"></script>
-    <script src="https://sharkvelocity.github.io/3d/cdn/gui/babylon.gui.min.js"></script>
-    <script src="https://sharkvelocity.github.io/3d/cdn/inspector/babylon.inspector.bundle.js"></script>
-    <script src="https://sharkvelocity.github.io/3d/cdn/cannon.js"></script>
+    <script src="https://sharkvelocity.github.io/phas3d/cdn/babylon.js"></script>
+    <script src="https://sharkvelocity.github.io/phas3d/cdn/earcut.min.js"></script>
+    <script src="https://sharkvelocity.github.io/phas3d/cdn/materialsLibrary/babylonjs.materials.min.js"></script>
+    <script src="https://sharkvelocity.github.io/phas3d/cdn/materialsLibrary/babylon.skyMaterial.min.js"></script>
+    <script src="https://sharkvelocity.github.io/phas3d/cdn/meshopt_decoder.js"></script>
+    <script src="https://sharkvelocity.github.io/phas3d/cdn/draco_decoder_gltf.js"></script>
+    <script src="https://sharkvelocity.github.io/phas3d/cdn/loaders/babylonjs.loaders.min.js"></script>
+    <script src="https://sharkvelocity.github.io/phas3d/cdn/gui/babylon.gui.min.js"></script>
+    <script src="https://sharkvelocity.github.io/phas3d/cdn/inspector/babylon.inspector.bundle.js"></script>
+    <script src="https://sharkvelocity.github.io/phas3d/cdn/cannon.js"></script>
     
     <!-- Core Config & Data -->
     <script src="https://sharkvelocity.github.io/phas3d/assets/dev/util/pp_runtime.js"></script>
@@ -134,7 +133,6 @@
     <script src="https://sharkvelocity.github.io/phas3d/assets/dev/ui/hud_ui.js"></script>
     <script src="https://sharkvelocity.github.io/phas3d/assets/dev/ui/belt_manager.js"></script>
     <script src="https://sharkvelocity.github.io/phas3d/assets/dev/ui/notebook_ui.js"></script>
-    <script type="module" src="https://sharkvelocity.github.io/phas3d/journal/index.js"></script>
     <script src="https://sharkvelocity.github.io/phas3d/assets/dev/ui/van_ui.js"></script>
     <script src="https://sharkvelocity.github.io/phas3d/assets/dev/util/minimap_northup_xyz.js"></script>
 
