@@ -1,93 +1,117 @@
-// assets/dev/systems/uv_prints.js
+// uv_prints.js
+// UV footprints with fade + dispose
+
 (function(){
-  "use strict";
-  window.PP = window.PP || {};
-  PP.systems = PP.systems || {};
-  const BASE_URL = "https://sharkvelocity.github.io/phas3d/";
-  
-  const UV_SYSTEM = {
-    _scene: null,
-    _uvActive: false,
-    _allPrints: [],
-    _texture: null,
-    LIFETIME_MS: 120 * 1000, // 2 minutes
-  };
+  'use strict';
+  if (window.UVPrints) return;
 
-  UV_SYSTEM.init = function(scene) {
-    this._scene = scene;
-    this._texture = new BABYLON.Texture(`${BASE_URL}assets/textures/uv_texture.png`, scene);
-    
-    window.addEventListener('pp:uv_light:toggle', () => {
-      this._uvActive = !this._uvActive;
-      window.toast(`UV Light ${this._uvActive ? 'ON' : 'OFF'}`, 1000);
-      this.updatePrintVisibility();
-    });
+  const SCENE = ()=> window.scene || BABYLON.Engine?.LastCreatedScene;
 
-    // Clean up disposed prints from our tracking array periodically
-    scene.onBeforeRenderObservable.add(() => {
-      if (Math.random() < 0.01) { // Low-frequency check
-        this._allPrints = this._allPrints.filter(p => p && !p.isDisposed());
-      }
-    });
-  };
+  const TEX = './assets/textures/uv_footprint.png';
+  const TTL = 60, FADE = 15, SCALE = 0.45, HEIGHT = 0.02;
 
-  UV_SYSTEM.updatePrintVisibility = function() {
-    for (const print of this._allPrints) {
-      if (print && print.material && !print.isDisposed()) {
-        print.material.alpha = this._uvActive ? 1.0 : 0.0;
-      }
-    }
-  };
-
-  /**
-   * Called by ghost logic to place a print.
-   * @param {BABYLON.AbstractMesh} targetMesh The mesh to place the decal on.
-   * @param {BABYLON.Vector3} hitPoint World position for the center of the decal.
-   * @param {BABYLON.Vector3} hitNormal Normal of the surface at the hit point.
-   */
-  UV_SYSTEM.trigger = function(targetMesh, hitPoint, hitNormal) {
-    if (!targetMesh || !this._scene || !hitPoint || !hitNormal) return;
-
-    // Check if this is a valid piece of evidence for the current ghost
-    if (!window.PP.checkForEvidence('Ultraviolet')) {
-      return;
-    }
-
-    const size = new BABYLON.Vector3(0.4, 0.4, 0.2); // width, height, depth of decal projection
-    const printDecal = BABYLON.MeshBuilder.CreateDecal("uvPrint", targetMesh, {
-      position: hitPoint,
-      normal: hitNormal,
-      size: size,
-      angle: Math.random() * Math.PI * 2 // Random rotation
-    });
-
-    const mat = new BABYLON.StandardMaterial("uvPrintMat", this._scene);
-    mat.diffuseTexture = this._texture;
-    mat.emissiveTexture = this._texture;
-    mat.emissiveColor = new BABYLON.Color3(0.8, 1, 0.8);
-    mat.useAlphaFromDiffuseTexture = true;
-    mat.specularColor = new BABYLON.Color3(0, 0, 0);
+  let mat=null;
+  function ensureMat(s){
+    if (mat) return mat;
+    mat = new BABYLON.StandardMaterial('uv_print_mat', s);
+    mat.diffuseTexture  = new BABYLON.Texture(TEX, s, true, false);
+    mat.emissiveTexture = mat.diffuseTexture;
+    mat.opacityTexture  = mat.diffuseTexture;
+    mat.diffuseColor    = new BABYLON.Color3(0.0, 0.6, 0.2);
+    mat.emissiveColor   = new BABYLON.Color3(0.2, 1.0, 0.4);
+    mat.specularColor   = new BABYLON.Color3(0,0,0);
     mat.backFaceCulling = false;
-    mat.alpha = this._uvActive ? 1.0 : 0.0; // Initially visible only if UV is on
-    mat.zOffset = -2; // Prevent z-fighting
+    mat.freeze?.();
+    return mat;
+  }
 
-    printDecal.material = mat;
-    printDecal.isPickable = false;
+  const PRINTS = [];
+  function now(){ return (performance?.now?.() ?? Date.now())/1000; }
 
-    this._allPrints.push(printDecal);
+  function makePrintNode(s, pos, rotY=0, flip=false){
+    const plane = BABYLON.MeshBuilder.CreatePlane('uv_print', { size: SCALE, sideOrientation: BABYLON.Mesh.DOUBLESIDE }, s);
+    plane.material = ensureMat(s);
+    plane.rotation = new BABYLON.Vector3(Math.PI/2, 0, flip ? Math.PI : 0);
+    plane.position = new BABYLON.Vector3(pos.x, (pos.y||0)+HEIGHT, pos.z);
+    plane.rotation.y = rotY;
+    plane.isPickable = false;
+    plane.doNotSyncBoundingInfo = true;
+    plane.freezeWorldMatrix?.();
+    return plane;
+  }
 
-    setTimeout(() => {
-      try { 
-        if(printDecal && !printDecal.isDisposed()) {
-            printDecal.dispose(false, true); // Dispose mesh and its material
-        }
-      } catch(e) {}
-    }, this.LIFETIME_MS);
-    
-    // Announce evidence found (only once is better, but this is simple)
-    window.PP.foundEvidence('Ultraviolet');
-    window.toast("You have found evidence: Ultraviolet", 2000);
+  function snapToGround(s, p){
+    try{
+      const ray = new BABYLON.Ray(new BABYLON.Vector3(p.x, (p.y||2)+5, p.z), new BABYLON.Vector3(0,-1,0), 20);
+      const hit = s.pickWithRay(ray, m => m && m.isPickable !== false);
+      if (hit?.hit && hit.pickedPoint) return hit.pickedPoint;
+    }catch(_){}
+    return p;
+  }
+
+  const API = {};
+  API.addFootprint = function(pos, rotY=0){
+    const s=SCENE(); if (!s) return null;
+    const p = snapToGround(s, pos);
+    const flip = Math.random() < 0.5;
+    const mesh = makePrintNode(s, p, rotY, flip);
+    PRINTS.push({ mesh, born: now() });
+    return mesh;
+  };
+  API.addStepPair = function(centerPos, dirYRad){
+    const s=SCENE(); if (!s) return null;
+    const dir = new BABYLON.Vector3(Math.sin(dirYRad), 0, Math.cos(dirYRad));
+    const side = BABYLON.Vector3.Cross(dir, BABYLON.Axis.Y).normalize();
+    const stride = 0.35, width = 0.12;
+    const pL = centerPos.add(dir.scale(stride)).add(side.scale(+width));
+    const pR = centerPos.add(dir.scale(stride*1.9)).add(side.scale(-width));
+    API.addFootprint(pL, dirYRad);
+    API.addFootprint(pR, dirYRad);
+  };
+  API.clear = function(){
+    for (const it of PRINTS){ try{ it.mesh.dispose(); }catch(_){ } }
+    PRINTS.length = 0;
   };
 
-  PP.systems.uv_prints = UV_SYSTEM;
+  function attachLoop(){
+    const s=SCENE(); if (!s){ setTimeout(attachLoop, 120); return; }
+    const eng = s.getEngine?.() || BABYLON.Engine?.LastCreatedEngine;
+    s.onBeforeRenderObservable.add(()=>{
+      const t = now();
+      for (let i=PRINTS.length-1; i>=0; i--){
+        const it = PRINTS[i], age = t - it.born;
+        if (age >= TTL){
+          try{ it.mesh.dispose(); }catch(_){}
+          PRINTS.splice(i,1);
+          continue;
+        }
+        if (age >= (TTL - FADE)){
+          const a = 1 - ((age - (TTL - FADE))/FADE);
+          const m = it.mesh.material;
+          if (m) { m.alpha = Math.max(0, Math.min(1, a)); }
+        }
+      }
+    });
+  }
+  attachLoop();
+
+  window.UVPrints = API;
+})();
+
+/* ---- Storage registration (UV Prints item) ---- */
+(function(){
+  if (!window.registerItem) return;
+  registerItem({
+    id: "uv_prints",
+    name: "UV Prints",
+    icon: "./assets/icons/uv_prints.png",
+    defaultCharges: Infinity,
+    onEquip(){
+      try{
+        if (window.uvLight){ uvLight.intensity = 1.2; }
+        const badge = document.getElementById("camera-ir");
+        if (badge) badge.style.display = "block";
+      }catch(_){}
+    }
+  });
 })();

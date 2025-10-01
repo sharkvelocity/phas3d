@@ -1,4 +1,3 @@
-
 // ./assets/dev/tools/ghost_dev.js — v1.4
 // Dev panel for ghost model, teleport, scale, dev-visible,
 // and barrier drawing with save/load/export.

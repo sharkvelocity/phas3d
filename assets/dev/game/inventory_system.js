@@ -1,4 +1,5 @@
 
+
 // File: assets/dev/game/inventory_system.js
 // Van inventory & loadout (3 user slots). Belt is updated via events AND direct apply.
 (function(){

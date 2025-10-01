@@ -1,5 +1,6 @@
 
 
+
 /* fp_tp_sync.js — single-rig FP/TP with no rubberbanding (v2.3 - Modular Input)
    - Loads the player model from assets/models/player/ and attaches it to the rig.
    - Hides player model in first-person view.

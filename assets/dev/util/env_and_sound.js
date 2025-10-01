@@ -8,7 +8,7 @@
 
   const PP = window.PP || (window.PP = {});
   PP.audio = PP.audio || {};
-  const BASE_URL = "https://sharkvelocity.github.io/phas3d/";
+  const BASE_URL = "https://sharkvelocity.github.io/3d/";
 
   PP.audio.gain = { master:1.0, ambient:1.0, sfx:1.0, ui:1.0 };
 
