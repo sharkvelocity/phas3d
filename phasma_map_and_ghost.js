@@ -1,203 +1,139 @@
-// ./phasma_map_and_ghost.js
-// Procedural House generator using primitives and CSG, removing all .glb dependencies for rooms.
+// phasma_map_and_ghost.js
+// Procedural house generator using only primitives and CSG.
 (function(){
-  if(window.ProHouseGenerator) return;
+  "use strict";
+  if (window.ProHouseGenerator) return;
 
-  const WALL_HEIGHT = 3;
+  // --- Configuration Constants ---
+  const WALL_HEIGHT = 3.0;
   const WALL_THICKNESS = 0.15;
   const DOOR_WIDTH = 1.2;
   const DOOR_HEIGHT = 2.2;
+  const CELL_SIZE = 5;
 
-  // Helper function to create a basic plane for a wall.
-  function createWallPlane(name, width, height, scene) {
-    const wallPlane = BABYLON.MeshBuilder.CreatePlane(name, {width: width, height: height, sideOrientation: BABYLON.Mesh.DOUBLESIDE}, scene);
-    wallPlane.isVisible = false; // The CSG source mesh should be invisible.
-    return wallPlane;
+  // --- Private Helper Functions ---
+
+  // Creates the CSG box used to cut a doorway out of a wall plane.
+  function createDoorCutoutBox(scene) {
+    const box = BABYLON.MeshBuilder.CreateBox("doorCutout", {
+      width: DOOR_WIDTH,
+      height: DOOR_HEIGHT,
+      depth: WALL_THICKNESS * 2 // Make it thick enough to cut through the wall
+    }, scene);
+    box.position.y = DOOR_HEIGHT / 2; // Align bottom with the floor
+    box.isVisible = false;
+    return box;
   }
-  
-  // Helper function to create the box used to cut out a door shape.
-  function createDoorCutout(scene) {
-      const cutout = BABYLON.MeshBuilder.CreateBox("doorCutout", {width: DOOR_WIDTH, height: DOOR_HEIGHT, depth: WALL_THICKNESS * 2}, scene);
-      cutout.position.y = DOOR_HEIGHT / 2; // Aligns bottom of cutout with the floor
-      cutout.isVisible = false;
-      return cutout;
-  }
 
-  window.ProHouseGenerator = {
-    GRID_WIDTH: 10,
-    GRID_DEPTH: 10,
-    CELL_SIZE: 5, // Using a 5-meter grid cell size.
-    DEBUG_GRID: false,
+  // Builds a single room's geometry from scratch based on its grid position and door requirements.
+  function buildCellGeometry(scene, roomData, gridPos, materials) {
+    const roomNode = new BABYLON.TransformNode(`room_${gridPos.x}_${gridPos.z}`, scene);
 
-    // Room templates now only define size and a descriptive name.
-    roomTemplates: [
-      { name: "Large Square", size: [2, 2] },
-      { name: "Small Square", size: [1, 1] },
-      { name: "Hallway N-S", size: [1, 2] },
-      { name: "Hallway E-W", size: [2, 1] },
-    ],
+    // --- Floor and Ceiling ---
+    const floor = BABYLON.MeshBuilder.CreateGround("floor", { width: CELL_SIZE, height: CELL_SIZE }, scene);
+    floor.position.y = 0;
+    floor.material = materials.floor;
+    floor.checkCollisions = true;
+    floor.parent = roomNode;
 
-    // Helper for placing interactive door hinges accurately.
-    _doorOffsets: {
-      north: { x: 0, z: -0.5, ry: 0 },
-      south: { x: 0, z: 0.5,  ry: Math.PI },
-      east:  { x: 0.5, z: 0,  ry: Math.PI / 2 },
-      west:  { x: -0.5, z: 0, ry: -Math.PI / 2 }
-    },
+    const ceiling = floor.clone("ceiling");
+    ceiling.position.y = WALL_HEIGHT;
+    ceiling.rotation.x = Math.PI; // Flip to face down
+    ceiling.material = materials.ceiling;
+    ceiling.parent = roomNode;
 
-    generateMap: async function(scene){
-      if(!scene) throw new Error("Scene required for map generation");
+    // --- Walls ---
+    const wallDefs = [
+      { name: 'north', hasDoor: roomData.doors.north, pos: new BABYLON.Vector3(0, WALL_HEIGHT / 2, CELL_SIZE / 2), rotY: Math.PI / 2, len: CELL_SIZE },
+      { name: 'south', hasDoor: roomData.doors.south, pos: new BABYLON.Vector3(0, WALL_HEIGHT / 2, -CELL_SIZE / 2), rotY: -Math.PI / 2, len: CELL_SIZE },
+      { name: 'east',  hasDoor: roomData.doors.east,  pos: new BABYLON.Vector3(CELL_SIZE / 2, WALL_HEIGHT / 2, 0), rotY: 0, len: CELL_SIZE },
+      { name: 'west',  hasDoor: roomData.doors.west,  pos: new BABYLON.Vector3(-CELL_SIZE / 2, WALL_HEIGHT / 2, 0), rotY: Math.PI, len: CELL_SIZE },
+    ];
+    
+    for (const def of wallDefs) {
+      const wallPlane = BABYLON.MeshBuilder.CreatePlane(`wall_plane_${def.name}`, { width: def.len, height: WALL_HEIGHT }, scene);
+      wallPlane.isVisible = false; // Source for CSG is invisible
 
-      const grid = Array.from({length:this.GRID_WIDTH}, ()=>Array(this.GRID_DEPTH).fill(null));
-      const mapData = { rooms: [], meshes: [], doors: [], spawn: null };
-
-      if(this.DEBUG_GRID){
-        const ground = BABYLON.MeshBuilder.CreateGround("grid", { width: this.GRID_WIDTH*this.CELL_SIZE, height:this.GRID_DEPTH*this.CELL_SIZE }, scene);
-        const gridMat = new BABYLON.GridMaterial("gridMat", scene);
-        gridMat.majorUnitFrequency = this.CELL_SIZE;
-        gridMat.gridRatio = 1;
-        ground.material = gridMat;
+      let finalWall;
+      if (def.hasDoor) {
+        const wallCSG = BABYLON.CSG.FromMesh(wallPlane);
+        const doorCutoutBox = createDoorCutoutBox(scene);
+        const doorCSG = BABYLON.CSG.FromMesh(doorCutoutBox);
+        const wallWithDoorCSG = wallCSG.subtract(doorCSG);
+        finalWall = wallWithDoorCSG.toMesh(`wall_${def.name}`, materials.wall, scene, true);
+        doorCutoutBox.dispose();
+      } else {
+        finalWall = wallPlane.clone(`wall_${def.name}`);
+        finalWall.isVisible = true;
       }
-
-      // --- PASS 1: Place room templates into the grid layout ---
-      const vanX = Math.floor(this.GRID_WIDTH/2);
-      const vanZ = this.GRID_DEPTH-1;
-      grid[vanX][vanZ] = { type:"van" };
-      const vanWorldPos = new BABYLON.Vector3(vanX*this.CELL_SIZE, 0, vanZ*this.CELL_SIZE);
-      mapData.spawn = vanWorldPos.add(new BABYLON.Vector3(0,1.8,0));
-      window.PP_SPAWN_POS = mapData.spawn;
-
-      // Use a simple, deterministic layout to ensure a valid house is always created.
-      const startX = vanX;
-      const startZ = vanZ - 2;
-      if (startX >= 0 && startZ >= 0) grid[startX][startZ] = { template: this.roomTemplates[0], doors: {} }; // Large Room
-      if (startX >= 0 && startZ - 1 >= 0) grid[startX][startZ - 1] = { template: this.roomTemplates[1], doors: {} }; // Small Square
-      if (startX + 1 < this.GRID_WIDTH && startZ - 1 >= 0) grid[startX + 1][startZ - 1] = { template: this.roomTemplates[2], doors: {} }; // Hall N-S
-      if (startX - 1 >= 0 && startZ >= 0) grid[startX - 1][startZ] = { template: this.roomTemplates[3], doors: {} }; // Hall E-W
       
-      // --- PASS 2: Analyze the layout and determine where doors are needed ---
-      for(let x=0; x<this.GRID_WIDTH; x++){
-        for(let z=0; z<this.GRID_DEPTH; z++){
-          if(!grid[x][z]?.template) continue;
-          // Check East neighbor
-          if (x + 1 < this.GRID_WIDTH && grid[x+1][z]?.template) {
-            grid[x][z].doors.east = true;
-            grid[x+1][z].doors.west = true;
-          }
-          // Check North neighbor
-          if (z > 0 && grid[x][z-1]?.template) {
-            grid[x][z].doors.north = true;
-            grid[x][z-1].doors.south = true;
-          }
+      wallPlane.dispose();
+      
+      finalWall.position = def.pos;
+      finalWall.rotation.y = def.rotY;
+      finalWall.material = materials.wall;
+      finalWall.checkCollisions = true;
+      finalWall.parent = roomNode;
+    }
+
+    const worldPos = new BABYLON.Vector3(gridPos.x * CELL_SIZE + CELL_SIZE/2, 0, gridPos.z * CELL_SIZE + CELL_SIZE/2);
+    roomNode.position = worldPos;
+    return roomNode;
+  }
+
+  // --- Public Generator Object ---
+  window.ProHouseGenerator = {
+    GRID_SIZE: 8,
+
+    generateMap: async function(scene) {
+      console.log("[ProHouseGenerator] Starting map generation with primitives...");
+      const grid = Array.from({ length: this.GRID_SIZE }, () => Array(this.GRID_SIZE).fill(null));
+      const mapRoot = new BABYLON.TransformNode("ProceduralMapRoot", scene);
+
+      // --- Pass 1: Define a simple, static layout to ensure it always works ---
+      const layout = [ {x:3, z:3}, {x:3, z:4}, {x:4, z:4}, {x:5, z:4} ];
+      layout.forEach(p => {
+        grid[p.x][p.z] = { doors: { north: false, south: false, east: false, west: false } };
+      });
+      
+      window.PP_SPAWN_POS = new BABYLON.Vector3(3 * CELL_SIZE, 1.8, 6 * CELL_SIZE);
+
+      // --- Pass 2: Plan Doorways by checking neighbors ---
+      for (let x = 0; x < this.GRID_SIZE; x++) {
+        for (let z = 0; z < this.GRID_SIZE; z++) {
+          if (!grid[x][z]) continue;
+          if (x + 1 < this.GRID_SIZE && grid[x + 1][z]) { grid[x][z].doors.east = true; grid[x + 1][z].doors.west = true; }
+          if (z + 1 < this.GRID_SIZE && grid[x][z + 1]) { grid[x][z].doors.north = true; grid[x][z + 1].doors.south = true; }
         }
       }
 
-      // --- PASS 3: Construct the geometry for each room and place interactive doors ---
-      const wallMat = new BABYLON.StandardMaterial("wallMat", scene);
-      wallMat.diffuseColor = new BABYLON.Color3(0.8, 0.75, 0.7);
-      const floorMat = new BABYLON.StandardMaterial("floorMat", scene);
-      floorMat.diffuseColor = new BABYLON.Color3(0.5, 0.4, 0.3);
+      // --- Pass 3: Build Geometry from the Plan ---
+      const materials = {
+        wall: new BABYLON.StandardMaterial("wallMat", scene),
+        floor: new BABYLON.StandardMaterial("floorMat", scene),
+        ceiling: new BABYLON.StandardMaterial("ceilingMat", scene)
+      };
+      materials.wall.diffuseColor = new BABYLON.Color3(0.9, 0.85, 0.8);
+      materials.floor.diffuseColor = new BABYLON.Color3(0.6, 0.5, 0.4);
+      materials.ceiling.diffuseColor = new BABYLON.Color3(0.95, 0.95, 0.95);
 
-      for(let x=0; x<this.GRID_WIDTH; x++){
-        for(let z=0; z<this.GRID_DEPTH; z++){
-          const cell = grid[x][z];
-          if(!cell || !cell.template) continue;
-
-          if (window.showLoading) {
-            const progress = 40 + ((x * this.GRID_DEPTH + z) / (this.GRID_WIDTH * this.GRID_DEPTH)) * 30;
-            window.showLoading(true, progress, "Building World...", `Generating room at (${x},${z})`);
-          }
-
-          const roomNode = this.buildRoomFromPrimitives(scene, cell, x, z, wallMat, floorMat);
-          mapData.meshes.push(roomNode);
-
-          // Create invisible interactive door triggers where planned
-          for(const dir in cell.doors){
-            const offset = this._doorOffsets[dir];
-            if(!offset) continue;
-            
-            const worldPos = new BABYLON.Vector3(x*this.CELL_SIZE, 0, z*this.CELL_SIZE);
-            const doorPos = worldPos.add(new BABYLON.Vector3(offset.x*this.CELL_SIZE, 0, offset.z*this.CELL_SIZE));
-            const doorId = `door_${x}_${z}_${dir}`;
-            
-            const hinge = BABYLON.MeshBuilder.CreateBox(doorId+"_hinge", {width:DOOR_WIDTH, height:DOOR_HEIGHT, depth:0.2}, scene);
-            hinge.position.copyFrom(doorPos);
-            hinge.position.y = DOOR_HEIGHT/2;
-            hinge.rotation.y = offset.ry;
-            hinge.isVisible = false;
-            hinge.checkCollisions = true; // Acts as the physical door barrier
-            mapData.doors.push({ id: doorId, position: doorPos, rotationY: offset.ry, type:"door", mesh: hinge });
-            mapData.meshes.push(hinge);
+      for (let x = 0; x < this.GRID_SIZE; x++) {
+        for (let z = 0; z < this.GRID_SIZE; z++) {
+          if (grid[x][z]) {
+            const roomNode = buildCellGeometry(scene, grid[x][z], { x, z }, materials);
+            roomNode.parent = mapRoot;
           }
         }
       }
-
-      return mapData;
-    },
-
-    buildRoomFromPrimitives: function(scene, cell, gridX, gridZ, wallMat, floorMat) {
-        const { template, doors } = cell;
-        const [sizeX, sizeZ] = template.size;
-        const worldX = gridX * this.CELL_SIZE;
-        const worldZ = gridZ * this.CELL_SIZE;
-        const roomWidth = sizeX * this.CELL_SIZE;
-        const roomDepth = sizeZ * this.CELL_SIZE;
-
-        const roomRoot = new BABYLON.TransformNode(`room_${gridX}_${gridZ}`, scene);
-
-        // --- Floor & Ceiling ---
-        const floor = BABYLON.MeshBuilder.CreateGround(`floor_${gridX}_${gridZ}`, { width: roomWidth, height: roomDepth }, scene);
-        floor.position.set(worldX + roomWidth/2, 0, worldZ + roomDepth/2);
-        floor.material = floorMat;
-        floor.parent = roomRoot;
-        floor.checkCollisions = true;
-
-        const ceiling = floor.clone(`ceiling_${gridX}_${gridZ}`);
-        ceiling.position.y = WALL_HEIGHT;
-        ceiling.rotation.x = Math.PI; // Flip to face down
-        ceiling.parent = roomRoot;
-        ceiling.checkCollisions = true;
-        
-        // --- Walls (with potential door cutouts) ---
-        const wallDefs = [
-            { dir: 'north', hasDoor: doors.north, w: roomWidth, pos: new BABYLON.Vector3(worldX + roomWidth/2, WALL_HEIGHT/2, worldZ + roomDepth), rotY: 0 },
-            { dir: 'south', hasDoor: doors.south, w: roomWidth, pos: new BABYLON.Vector3(worldX + roomWidth/2, WALL_HEIGHT/2, worldZ), rotY: Math.PI },
-            { dir: 'east', hasDoor: doors.east, w: roomDepth, pos: new BABYLON.Vector3(worldX + roomWidth, WALL_HEIGHT/2, worldZ + roomDepth/2), rotY: -Math.PI/2 },
-            { dir: 'west', hasDoor: doors.west, w: roomDepth, pos: new BABYLON.Vector3(worldX, WALL_HEIGHT/2, worldZ + roomDepth/2), rotY: Math.PI/2 },
-        ];
-        
-        wallDefs.forEach((wd, i) => {
-            let finalWall;
-            const wallPlane = createWallPlane(`wall_plane_${gridX}_${gridZ}_${wd.dir}`, wd.w, WALL_HEIGHT, scene);
-            
-            if (wd.hasDoor) {
-                const wallCSG = BABYLON.CSG.FromMesh(wallPlane);
-                const doorCutout = createDoorCutout(scene);
-                const doorCSG = BABYLON.CSG.FromMesh(doorCutout);
-                
-                const wallWithDoorCSG = wallCSG.subtract(doorCSG);
-                finalWall = wallWithDoorCSG.toMesh(`wall_${gridX}_${gridZ}_${wd.dir}`, wallMat, scene, true);
-
-                doorCutout.dispose();
-            } else {
-                finalWall = wallPlane.clone(`wall_${gridX}_${gridZ}_${wd.dir}`);
-                finalWall.isVisible = true; // Make the clone visible
-            }
-            
-            finalWall.position = wd.pos;
-            finalWall.rotation.y = wd.rotY;
-            finalWall.material = wallMat;
-            finalWall.parent = roomRoot;
-            finalWall.checkCollisions = true;
-            
-            wallPlane.dispose(); // Dispose the original invisible plane
-        });
-
-        return roomRoot;
+      
+      console.log("[ProHouseGenerator] Map generation complete.");
+      return { root: mapRoot, doors: [] };
     }
   };
-  
+
+  // Signal that this module is ready for bootstrap.js
   if (window.PP?.signalReady) {
     window.PP.signalReady('proceduralGenerator');
   }
+
 })();
