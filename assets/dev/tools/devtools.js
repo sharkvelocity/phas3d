@@ -95,7 +95,6 @@
     const root = $('#devtools-panel');
     if (!root) return false;
     root.innerHTML = "";
-    root.style.display = 'block';
     const hdr = el('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'6px'}},[
       el('div',{style:{color:'#9ff',fontWeight:'bold'}},['Developer Tools (v4)']),
       (STATE.fpsEl = el('div',{style:{color:'#8ff',fontSize:'12px'}},['FPS: --']))

@@ -114,7 +114,7 @@ async function loadSelectedMap(mapId) {
 
 async function setupMapAndWeather(mapId) {
     log("3. Loading map and initializing weather...");
-    showLoading(true, 40, "Building World...", "Generating map layout...");
+    showLoading(true, 40, "Building World...", "Loading map data...");
     
     await loadSelectedMap(mapId);
 
@@ -260,6 +260,26 @@ async function initialize() {
         }
     }, 15000);
 
+    // This listener will handle starting the actual game once the user decides.
+    window.addEventListener('pp:start-investigation', async (e) => {
+        const mapId = e.detail?.mapId;
+        if (!mapId) {
+            console.error("Start event fired without a mapId.");
+            return;
+        }
+        
+        try {
+            await startGame(mapId);
+        } catch(error) {
+            console.error("CRITICAL FAILURE DURING GAME START:", error);
+            clearTimeout(fallbackTimer); // Also clear here in case of late failure
+            showLoading(false);
+            const fallbackOverlay = document.getElementById('fallback-overlay');
+            if (fallbackOverlay) fallbackOverlay.style.display = 'flex';
+        }
+    }, { once: true });
+
+
     try {
         log("Waiting for critical systems to be ready...");
         showLoading(true, 5, "Initializing...", "Waiting for systems...");
@@ -267,7 +287,6 @@ async function initialize() {
             'playerRig',
             'ghostLogic',
             'mapLoader',
-            'proceduralGenerator',
             'inputManager',
             'envAndSound',
             'pointerLock'
@@ -278,27 +297,31 @@ async function initialize() {
         await setupEngine();
         
         // This is the gatekeeper. The rest of the game only loads if a frame renders.
-        scene.onAfterRenderObservable.addOnce(async () => {
-            try {
-                log("First frame rendered successfully (Smoke Test Passed).");
-                window.PP.gameHasRenderedFirstFrame = true;
-                clearTimeout(fallbackTimer);
-                
-                // Clean up the debug geometry now that we know the engine works.
-                scene.getMeshByName("debugGround")?.dispose();
-                scene.getMeshByName("debugSphere")?.dispose();
-                scene.getMaterialByName("debugMat")?.dispose();
-                
-                // Now, load the actual game assets.
-                showLoading(true, 20, "Loading Game...", "Smoke test passed.");
-                await startGame('procedural_house');
-            } catch(error) {
-                console.error("CRITICAL FAILURE DURING GAME START:", error);
-                clearTimeout(fallbackTimer);
-                showLoading(false);
-                const fallbackOverlay = document.getElementById('fallback-overlay');
-                if (fallbackOverlay) fallbackOverlay.style.display = 'flex';
-            }
+        scene.onAfterRenderObservable.addOnce(() => {
+            log("First frame rendered successfully (Smoke Test Passed).");
+            window.PP.gameHasRenderedFirstFrame = true;
+            clearTimeout(fallbackTimer);
+            
+            // Clean up the debug geometry now that we know the engine works.
+            scene.getMeshByName("debugGround")?.dispose();
+            scene.getMeshByName("debugSphere")?.dispose();
+            scene.getMaterialByName("debugMat")?.dispose();
+            
+            // Show the Van UI to let the user start the game.
+            showLoading(false); // Hide the "Loading..." overlay
+            setTimeout(() => { // Short delay for transition
+                if (window.PP?.vanUI?.show) {
+                    window.PP.vanUI.show();
+                } else {
+                    warn("Van UI not found. Cannot start game selection.");
+                    const fallbackOverlay = document.getElementById('fallback-overlay');
+                    if(fallbackOverlay) {
+                        fallbackOverlay.querySelector('h2').textContent = "UI Error";
+                        fallbackOverlay.querySelector('p').textContent = "The main menu failed to load.";
+                        fallbackOverlay.style.display = 'flex';
+                    }
+                }
+            }, 500); // Match loading overlay fade-out time
         });
 
     } catch(error) {

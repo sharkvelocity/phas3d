@@ -1,6 +1,4 @@
-// moon.js
-// Renders a visible billboarded moon using ./assets/textures/moon.jpg
-
+//moon.js
 (function(){
   'use strict';
   if (window.__MoonReady) return; window.__MoonReady = true;
