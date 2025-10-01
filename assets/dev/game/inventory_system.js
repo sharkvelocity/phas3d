@@ -6,7 +6,7 @@
   "use strict";
   const PP = (window.PP = window.PP || {});
   PP.inventory = PP.inventory || {};
-  const BASE_URL = "https://sharkvelocity.github.io/phas3d/";
+  const BASE_URL = "https://sharkvelocity.github.io/3d/";
 
   /* -------------------- Catalog (display + icons) -------------------- */
   // Icon paths are now loaded from an external URL to prevent 404 errors.

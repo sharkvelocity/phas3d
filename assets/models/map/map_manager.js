@@ -4,7 +4,7 @@
 "use strict";
 if(window.PP && window.PP.mapManager) return;
 window.PP = window.PP || {};
-const BASE_URL = "https://sharkvelocity.github.io/phas3d/";
+const BASE_URL = "https://sharkvelocity.github.io/3d/";
 
 let currentMapRoot = null;
 const log  = (...a)=>{ try{ console.log("[mapManager]", ...a); }catch{} };
