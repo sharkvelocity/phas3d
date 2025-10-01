@@ -3,6 +3,7 @@
   "use strict";
   window.PP = window.PP || {};
   PP.systems = PP.systems || {};
+  const BASE_URL = "https://sharkvelocity.github.io/phas3d/";
   
   const UV_SYSTEM = {
     _scene: null,
@@ -14,7 +15,7 @@
 
   UV_SYSTEM.init = function(scene) {
     this._scene = scene;
-    this._texture = new BABYLON.Texture("./assets/textures/uv_texture.png", scene);
+    this._texture = new BABYLON.Texture(`${BASE_URL}assets/textures/uv_texture.png`, scene);
     
     window.addEventListener('pp:uv_light:toggle', () => {
       this._uvActive = !this._uvActive;

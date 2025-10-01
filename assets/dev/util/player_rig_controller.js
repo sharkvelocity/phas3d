@@ -15,6 +15,7 @@
   const toRad = d => d * Math.PI / 180;
   const clamp = (v,min,max)=> Math.max(min, Math.min(max,v));
   const cfg = ()=> window.PP?.controls;
+  const BASE_URL = "https://sharkvelocity.github.io/phas3d/";
 
   const S = {
     rigRoot:null, yawNode:null, head:null, handNode:null, body:null,
@@ -52,7 +53,7 @@
     S.rigRoot=rigRoot; S.yawNode=yaw; S.head=head; S.handNode=handNode;
     
     try {
-        const result = await BABYLON.SceneLoader.ImportMeshAsync(null, "./assets/models/player/", "main_player.glb", s);
+        const result = await BABYLON.SceneLoader.ImportMeshAsync(null, `${BASE_URL}assets/models/player/`, "main_player.glb", s);
         const body = result.meshes[0];
         if (body) {
             body.name = "player_body_root";

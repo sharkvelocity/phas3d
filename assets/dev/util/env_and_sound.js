@@ -8,24 +8,25 @@
 
   const PP = window.PP || (window.PP = {});
   PP.audio = PP.audio || {};
+  const BASE_URL = "https://sharkvelocity.github.io/phas3d/";
 
   PP.audio.gain = { master:1.0, ambient:1.0, sfx:1.0, ui:1.0 };
 
   const A = PP.audio.tracks = {
-    rain:      new Audio("./assets/audio/rainstorm.mp3"),
-    clear:     new Audio("./assets/audio/clearWeather.mp3"),
-    spiritbox: new Audio("./assets/audio/spiritbox.mp3"),
-    whisper:   new Audio("./assets/audio/whisper.mp3"),
-    doorCreak1:new Audio("./assets/audio/doorCreak1.mp3"),
-    doorCreak2:new Audio("./assets/audio/doorCreak2.mp3"),
-    slam1:     new Audio("./assets/audio/doorSlam1.mp3"),
-    slam2:     new Audio("./assets/audio/doorSlam2.mp3"),
-    ghostLaugh:new Audio("./assets/audio/ghostLaugh.mp3"),
-    writing:   new Audio("./assets/audio/GhostWriting1.mp3"),
+    rain:      new Audio(`${BASE_URL}assets/audio/rainstorm.mp3`),
+    clear:     new Audio(`${BASE_URL}assets/audio/clearWeather.mp3`),
+    spiritbox: new Audio(`${BASE_URL}assets/audio/spiritbox.mp3`),
+    whisper:   new Audio(`${BASE_URL}assets/audio/whisper.mp3`),
+    doorCreak1:new Audio(`${BASE_URL}assets/audio/doorCreak1.mp3`),
+    doorCreak2:new Audio(`${BASE_URL}assets/audio/doorCreak2.mp3`),
+    slam1:     new Audio(`${BASE_URL}assets/audio/doorSlam1.mp3`),
+    slam2:     new Audio(`${BASE_URL}assets/audio/doorSlam2.mp3`),
+    ghostLaugh:new Audio(`${BASE_URL}assets/audio/ghostLaugh.mp3`),
+    writing:   new Audio(`${BASE_URL}assets/audio/GhostWriting1.mp3`),
     steps: [
-      new Audio("./assets/audio/step1.mp3"),
-      new Audio("./assets/audio/step2.mp3"),
-      new Audio("./assets/audio/step3.mp3")
+      new Audio(`${BASE_URL}assets/audio/step1.mp3`),
+      new Audio(`${BASE_URL}assets/audio/step2.mp3`),
+      new Audio(`${BASE_URL}assets/audio/step3.mp3`)
     ]
   };
 

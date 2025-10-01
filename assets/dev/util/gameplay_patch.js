@@ -1,6 +1,7 @@
 // === Gameplay Patch: storage, belt safety, vanZone spawn, exterior rain ===
 window.PP = window.PP || {}; PP.cfg = PP.cfg || {}; PP.state = PP.state || {};
 PP.cfg.spawnWS = PP.cfg.spawnWS || new BABYLON.Vector3(47.52, 0.22, -105.28);
+const BASE_URL = "https://sharkvelocity.github.io/phas3d/";
 
 // ---------------- storage ----------------
 PP.storage = PP.storage || (function(){
@@ -144,7 +145,7 @@ function exteriorRain(){
     } return ok;
   }
   const tpl = new BABYLON.ParticleSystem("rain_template", 2000, sc);
-  try { tpl.particleTexture = new BABYLON.Texture("./assets/textures/rain.png", sc, true, false); } catch(_){}
+  try { tpl.particleTexture = new BABYLON.Texture(`${BASE_URL}assets/textures/rain.png`, sc, true, false); } catch(_){}
   tpl.blendMode = BABYLON.ParticleSystem.BLENDMODE_STANDARD;
   tpl.isBillboardBased = true; tpl.updateSpeed=0.02;
   tpl.minSize=0.05; tpl.maxSize=0.15; tpl.minEmitPower=4; tpl.maxEmitPower=7;

@@ -4,6 +4,7 @@
 (function(){
   'use strict';
   if (window.__MoonReady) return; window.__MoonReady = true;
+  const BASE_URL = "https://sharkvelocity.github.io/phas3d/";
 
   const SCENE = ()=> window.scene || BABYLON.Engine?.LastCreatedScene;
 
@@ -17,7 +18,7 @@
     disc.isPickable = false; disc.applyFog = false; disc.renderingGroupId = 0; // Render behind other things
 
     const mat = new BABYLON.StandardMaterial('moonMat', s);
-    mat.diffuseTexture = new BABYLON.Texture('./assets/textures/moon.jpg', s, true, false);
+    mat.diffuseTexture = new BABYLON.Texture(`${BASE_URL}assets/textures/moon.jpg`, s, true, false);
     mat.emissiveTexture = mat.diffuseTexture;
     mat.emissiveColor = new BABYLON.Color3(1,1,1);
     mat.specularColor = new BABYLON.Color3(0,0,0);

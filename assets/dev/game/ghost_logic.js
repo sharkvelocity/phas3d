@@ -6,7 +6,7 @@
   const log = (...a) => console.log("[GhostLogic]", ...a);
   const warn = (...a) => console.warn("[GhostLogic]", ...a);
   
-  const BASE_URL = "https://sharkvelocity.github.io/3d/assets/ghosts/";
+  const BASE_URL = "https://sharkvelocity.github.io/phas3d/assets/ghosts/";
 
   const GhostLogic = {
     _scene: null,

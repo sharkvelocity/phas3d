@@ -6,6 +6,7 @@
   if (window.LIGHTER) return;
 
   const log = (...a) => console.log("[Lighter]", ...a);
+  const BASE_URL = "https://sharkvelocity.github.io/phas3d/";
 
   const lighter = (window.LIGHTER = {
     mesh: null,
@@ -40,7 +41,7 @@
 
     // Create a flame particle system
     const flamePS = new BABYLON.ParticleSystem("lighterFlamePS", 500, scene);
-    flamePS.particleTexture = new BABYLON.Texture("./assets/textures/flare.png", scene);
+    flamePS.particleTexture = new BABYLON.Texture(`${BASE_URL}assets/textures/flare.png`, scene);
     
     // Emitter will be the lighter's root mesh
     flamePS.minEmitBox = new BABYLON.Vector3(-0.005, 0.03, -0.005);

@@ -3,6 +3,7 @@
 "use strict";
 if(window.PP && window.PP.mapManager) return;
 window.PP = window.PP || {};
+const BASE_URL = "https://sharkvelocity.github.io/phas3d/";
 
 let currentMapRoot = null;
 const log  = (...a)=>{ try{ console.log("[mapManager]", ...a); }catch{} };
@@ -27,7 +28,7 @@ async function loadMap(mapData) {
         throw new Error("Invalid map data. Cannot load map.");
     }
 
-    const mapUrl = `./assets/models/map/${mapData.file}`;
+    const mapUrl = `${BASE_URL}assets/models/map/${mapData.file}`;
     log(`Loading map: ${mapUrl}`);
 
     try {
