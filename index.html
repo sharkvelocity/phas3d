@@ -3,96 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhasmaPhoney</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>PhasmaPhoney Investigation</title>
     <style>
-        body, html { 
-            margin: 0; 
-            padding: 0; 
-            overflow: hidden; 
-            height: 100vh; 
-            width: 100vw; 
-            background: #000; 
+        html, body {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #000;
         }
-        #renderCanvas { 
-            position: absolute;
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+        .ui-overlay {
+            position: fixed;
             top: 0;
             left: 0;
-            width: 100%; 
-            height: 100%; 
-            touch-action: none; 
-            outline: none; 
-            z-index: 1;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            transition: opacity 0.5s ease-in-out;
         }
-        .ui-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
-        .ui-modal { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); pointer-events: auto; }
-        .toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-        .toast { background: rgba(0, 200, 255, 0.8); color: #000; padding: 10px 20px; border-radius: 20px; font-family: sans-serif; font-size: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        .action-bar { position: fixed; bottom: 84px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px solid rgba(0,255,255,0.1); }
-        .action-btn { background: rgba(0,0,0,0.5); border: 1px solid #088; color: #0ff; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 18px; cursor: pointer; transition: all 0.2s; }
-        .action-btn:hover { background: rgba(0, 255, 255, 0.2); border-color: #0ff; }
-        .item-belt { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; align-items: flex-end; gap: 8px; height: 64px; }
-        .belt-slot { width: 64px; height: 64px; background: rgba(0,0,0,0.4); border: 1px solid #066; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; position: relative; }
-        .belt-slot.active { border-color: #0ff; background: rgba(0, 255, 255, 0.2); box-shadow: 0 0 12px rgba(0,255,255,0.5); }
-        .belt-slot .slot-key { position: absolute; top: 2px; left: 4px; font-size: 10px; color: #0ff; opacity: 0.7; }
-        .belt-slot img { width: 48px; height: 48px; object-fit: contain; }
-        #notebook-modal { display: none; }
-        #devtools-panel { display: none; position: fixed; top: 10px; right: 10px; width: 480px; max-height: 90vh; overflow-y: auto; background: rgba(10,10,10,0.9); border: 1px solid #033; border-radius: 8px; padding: 12px; z-index: 9990; font-family: monospace; font-size: 13px; color: #eee; backdrop-filter: blur(4px); }
-        #devtools-toggle { display: none; position: fixed; top: 10px; right: 10px; z-index: 9991; padding: 4px 8px; background: #234; color: #9cf; border: 1px solid #456; cursor: pointer; border-radius: 4px; }
-        #start-investigation-btn:hover { background-color: #0aa; }
-        #loading-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 10000;
-            display: none; /* JS will manage */
-            flex-direction: column; justify-content: center; align-items: center;
-            color: #0ff; font-family: 'Courier New', monospace;
-            transition: opacity 0.5s ease;
-            opacity: 0;
+        .loading-content {
+            text-align: center;
         }
-        #loading-text { font-size: 1.5em; text-shadow: 0 0 8px #0ff; }
-        #loading-sub-text { font-size: 0.9em; color: #0aa; margin-top: 8px; height: 1.2em; transition: color 0.3s; }
-        #loading-bar-container {
-            width: 50%; max-width: 600px; height: 20px; margin-top: 20px;
-            border: 1px solid #088; border-radius: 5px; padding: 3px; background: #00000088;
+        .loading-bar-container {
+            width: 80%;
+            max-width: 400px;
+            height: 20px;
+            background-color: #111;
+            border: 1px solid #0ff;
+            margin-top: 20px;
         }
         #loading-bar {
-            width: 0%; height: 100%;
-            background: linear-gradient(90deg, #0aa, #0ff);
-            border-radius: 2px;
-            transition: width 0.3s ease-out;
+            width: 0%;
+            height: 100%;
+            background-color: #0ff;
+            transition: width 0.3s ease;
+        }
+        .item-belt {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(0, 20, 30, 0.7);
+            padding: 8px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            z-index: 5000;
+        }
+        .belt-slot {
+            width: 64px;
+            height: 64px;
+            border: 2px solid #088;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        .belt-slot.active {
+            border-color: #0ff;
+            box-shadow: 0 0 10px #0ff;
+            transform: scale(1.1);
+        }
+        .belt-slot img { max-width: 80%; max-height: 80%; }
+        .slot-key {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            font-size: 12px;
+            color: #0ff;
+            text-shadow: 0 0 3px #0ff;
         }
     </style>
+    <!-- Assuming Babylon.js is loaded from a CDN for simplicity -->
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
 </head>
 <body>
-    <div id="loading-overlay">
-        <div id="loading-text">Loading...</div>
-        <div id="loading-sub-text"></div>
-        <div id="loading-bar-container">
-            <div id="loading-bar"></div>
+    <canvas id="renderCanvas"></canvas>
+
+    <!-- UI Containers -->
+    <div id="loading-overlay" class="ui-overlay">
+        <div class="loading-content">
+            <h2 id="loading-text">Loading...</h2>
+            <p id="loading-sub-text"></p>
+            <div class="loading-bar-container">
+                <div id="loading-bar"></div>
+            </div>
         </div>
     </div>
     
-    <div id="fallback-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 0, 0, 0.8); z-index: 10001; flex-direction: column; justify-content: center; align-items: center; color: #f88; font-family: 'Courier New', monospace; text-align: center;">
-        <h2 style="font-size: 2em; text-shadow: 0 0 8px #f00;">Loading Error</h2>
-        <p style="margin: 20px;">The game failed to start properly. This might be a temporary issue.</p>
-        <button id="fallback-refresh-btn" style="padding: 12px 24px; font-size: 1.2em; background: #900; color: #fff; border: 2px solid #f33; border-radius: 8px; cursor: pointer;">
-            Refresh Page
-        </button>
+    <div id="fallback-overlay" class="ui-overlay" style="display: none; flex-direction: column;">
+        <h2>Critical Error</h2>
+        <p>The game failed to load. This might be a network or script error.</p>
+        <button id="fallback-refresh-btn" style="margin-top:20px; padding: 10px 20px;">Try Again</button>
     </div>
-    
-    <canvas id="renderCanvas"></canvas>
-    
-    <!-- Journal UI -->
-    <div id="notebook-modal" class="ui-overlay ui-modal" style="display: none; z-index: 9999; overflow-y: auto;">
-      <!-- Populated by notebook_ui.js -->
-    </div>
-    
-    <!-- UI overlays will be created by JS -->
-    <div id="devtools-toggle" style="display:none;">DEV</div>
-    <div id="devtools-panel"></div>
-    <div id="ghostdev-toggle" style="display:none;">GHOST</div>
-    <div id="ghostdev-panel"></div>
 
-    <!-- All scripts are now loaded dynamically by index.tsx -->
+    <div id="notebook-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9990;"></div>
+    <div id="van-ui-modal" class="ui-overlay" style="display: none;"></div>
+    <div id="item-belt-container" class="item-belt"></div>
+
+    <!-- Dev Tools Anchors -->
+    <div id="devtools-toggle" style="position:fixed; top:10px; right:10px; z-index:9999; display:none;">
+        <button style="background:#111; color:#0ff; border:1px solid #0ff; padding:5px 10px;">Dev Tools</button>
+    </div>
+    <div id="devtools-panel" style="position:fixed; top:50px; right:10px; width:450px; background:rgba(10,20,30,0.9); border:1px solid #088; padding:10px; z-index:9998; display:none;"></div>
+    
+    <div id="ghostdev-toggle" style="position:fixed; top:10px; right:120px; z-index:9999; display:none;">
+        <button style="background:#111; color:#0ff; border:1px solid #0ff; padding:5px 10px;">Ghost Dev</button>
+    </div>
+    <div id="ghostdev-panel" style="position:fixed; top:50px; right:120px; width:280px; background:rgba(10,20,30,0.9); border:1px solid #088; padding:10px; z-index:9998; display:none;"></div>
+
+    <script type="module" src="/index.tsx"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 {
-  "name": "PhasmaPhoney",
-  "description": "A 3D ghost hunting game inspired by Phasmophobia. Investigate haunted locations, gather evidence, and identify the supernatural entity.",
+  "name": "PhasmaPhoney Investigation",
+  "description": "A 3D ghost-hunting game built with Babylon.js. Investigate haunted locations, gather evidence, and identify supernatural entities.",
   "requestFramePermissions": []
 }
