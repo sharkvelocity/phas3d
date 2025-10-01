@@ -117,14 +117,20 @@ function computeSpawnWS(){
 }
 
 function forceSpawn(){
-  const sc = BABYLON.Engine?.LastCreatedScene || window.scene;
   const rig = window.PlayerRig?.getRigRoot();
-  const cam = sc?.activeCamera; 
-  if (!rig || !cam) return;
+  const rigState = window.PlayerRig?.getState();
+  
+  // Exit if the player rig isn't fully initialized yet.
+  if (!rig || !rigState) return;
   
   const p = computeSpawnWS();
   rig.position.copyFrom(p);
-  cam.setTarget(p.add(new BABYLON.Vector3(0,0,5))); // Look forward from spawn
+
+  // Set initial view direction by modifying the rig's state, NOT the camera directly.
+  // This prevents conflicts between this script and the player controller.
+  // A yaw of 0 radians makes the player face "north" (positive Z axis).
+  rigState.yaw = 0;
+  rigState.pitch = 0;
 }
 
 // ---------------- exterior rain (guards) ----------------
