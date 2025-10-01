@@ -95,7 +95,8 @@ function initializeSettings() {
   // FIX: Provide default values for required properties GHOST_DATA and ALL_EVIDENCE.
   // FIX: Add `cfg`, `state`, and `storage` to the initial object to satisfy TypeScript's inferred global type for PP, which requires these properties.
   // FIX: Use `null` for GHOST_DATA to satisfy the inferred type, which expects a complex object, not `{}`.
-  window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: {}, state: {}, storage: {} }) as Window['PP'];
+  // FIX: Add `spawnWS: null` to the cfg object to satisfy the inferred global type for PP.
+  window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: { spawnWS: null }, state: {}, storage: {} }) as Window['PP'];
 
   /* ------------ Controls (keys & movement tuning) ------------ */
   window.PP.controls = {
@@ -192,7 +193,8 @@ function initializeRuntime() {
     // FIX: Provide default values for required properties.
     // FIX: Add `cfg`, `state`, and `storage` to the initial object to satisfy TypeScript's inferred global type for PP, which requires these properties.
     // FIX: Use `null` for GHOST_DATA to satisfy the inferred type, which expects a complex object, not `{}`.
-    const PP = (window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: {}, state: {}, storage: {} }) as Window['PP']);
+    // FIX: Add `spawnWS: null` to the cfg object to satisfy the inferred global type for PP.
+    const PP = (window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: { spawnWS: null }, state: {}, storage: {} }) as Window['PP']);
     if (PP.runtime) return;
 
     PP.globals = PP.globals || {};
@@ -620,7 +622,8 @@ function initializeGhostLogic() {
     // Ensure window.PP.ghost exists before assigning to it
     // FIX: Add `state` and `storage` to the initial object to satisfy TypeScript's inferred global type for PP, which requires these properties.
     // FIX: Use `null` for GHOST_DATA to satisfy the inferred type, which expects a complex object, not `{}`.
-    window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: {}, state: {}, storage: {} }) as Window['PP'];
+    // FIX: Add `spawnWS: null` to the cfg object to satisfy the inferred global type for PP.
+    window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: { spawnWS: null }, state: {}, storage: {} }) as Window['PP'];
     window.PP.ghost = Object.assign(window.PP.ghost || {}, GhostLogic);
     window.PP.ghost.logic = true;
     
@@ -649,7 +652,8 @@ function initializeInputManager() {
       if ((window as any).__PP_BINDINGS__) return; (window as any).__PP_BINDINGS__ = true;
 
       // FIX: Initialize window.PP with required properties to satisfy the global type.
-      const PP = (window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: {}, state: {}, storage: {} })) as Window['PP'];
+      // FIX: Add `spawnWS: null` to the cfg object to satisfy the inferred global type for PP.
+      const PP = (window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: { spawnWS: null }, state: {}, storage: {} })) as Window['PP'];
       const C  = (PP.controls = PP.controls || {});
       PP.state = PP.state || {};
       PP.state.controls = PP.state.controls || { forward:false, back:false, left:false, right:false };
@@ -826,7 +830,8 @@ function initializePointerLockManager() {
       if (window.PP?.pointerLock) return;
 
       // FIX: Initialize window.PP with required properties to satisfy the global type.
-      const PP = (window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: {}, state: {}, storage: {} })) as Window['PP'];
+      // FIX: Add `spawnWS: null` to the cfg object to satisfy the inferred global type for PP.
+      const PP = (window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: { spawnWS: null }, state: {}, storage: {} })) as Window['PP'];
       const state = {
         canvas: null as HTMLElement | null,
         uiOpenCount: 0,       // how many UIs are asking to keep the mouse free
@@ -917,7 +922,8 @@ function initializeEnvAndSound() {
       if ((window as any).__PP_AUDIO__) return; (window as any).__PP_AUDIO__ = true;
 
       // FIX: Initialize window.PP with required properties to satisfy the global type.
-      window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: {}, state: {}, storage: {} }) as Window['PP'];
+      // FIX: Add `spawnWS: null` to the cfg object to satisfy the inferred global type for PP.
+      window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: { spawnWS: null }, state: {}, storage: {} }) as Window['PP'];
       const PP = window.PP;
       PP.audio = PP.audio || {};
       
@@ -1152,7 +1158,8 @@ function initializeMapLoader() {
     (function(){
       "use strict";
       // FIX: Initialize window.PP with required properties to satisfy the global type.
-      window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: {}, state: {}, storage: {} }) as Window['PP'];
+      // FIX: Add `spawnWS: null` to the cfg object to satisfy the inferred global type for PP.
+      window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: { spawnWS: null }, state: {}, storage: {} }) as Window['PP'];
       
       const MAPS = [
           {
@@ -1183,7 +1190,8 @@ function initializeMapManager() {
     "use strict";
     if(window.PP && window.PP.mapManager) return;
     // FIX: Initialize window.PP with required properties to satisfy the global type.
-    window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: {}, state: {}, storage: {} }) as Window['PP'];
+    // FIX: Add `spawnWS: null` to the cfg object to satisfy the inferred global type for PP.
+    window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: { spawnWS: null }, state: {}, storage: {} }) as Window['PP'];
     
     let currentMapRoot: any = null;
     const log  = (...a: any[])=>{ try{ console.log("[mapManager]", ...a); }catch{} };
@@ -1378,7 +1386,8 @@ function initializeInventorySystem() {
     (function(){
       "use strict";
       // FIX: Initialize window.PP with required properties to satisfy the global type.
-      const PP = (window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: {}, state: {}, storage: {} })) as Window['PP'];
+      // FIX: Add `spawnWS: null` to the cfg object to satisfy the inferred global type for PP.
+      const PP = (window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: { spawnWS: null }, state: {}, storage: {} })) as Window['PP'];
       PP.inventory = PP.inventory || {};
 
       const ITEM_META = {
@@ -1695,7 +1704,8 @@ function initializeDotsSystem() {
     (function(){
       "use strict";
       // FIX: Initialize window.PP with required properties to satisfy the global type.
-      window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: {}, state: {}, storage: {} }) as Window['PP'];
+      // FIX: Add `spawnWS: null` to the cfg object to satisfy the inferred global type for PP.
+      window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: { spawnWS: null }, state: {}, storage: {} }) as Window['PP'];
       PP.tools = PP.tools || {};
       const V3 = window.BABYLON.Vector3, Q = window.BABYLON.Quaternion, M = window.BABYLON.Matrix;
 
@@ -1927,7 +1937,8 @@ function initializeEmf() {
       if ((window as any).__PP_EMF__) return; (window as any).__PP_EMF__ = true;
 
       // FIX: Initialize window.PP with required properties to satisfy the global type.
-      const PP = (window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: {}, state: {}, storage: {} })) as Window['PP'];
+      // FIX: Add `spawnWS: null` to the cfg object to satisfy the inferred global type for PP.
+      const PP = (window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: { spawnWS: null }, state: {}, storage: {} })) as Window['PP'];
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
       let ctx: AudioContext | null = null;
       try {
@@ -2037,7 +2048,8 @@ function initializeParabolicMic() {
     (function(){
       "use strict";
       // FIX: Initialize window.PP with required properties to satisfy the global type.
-      window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: {}, state: {}, storage: {} }) as Window['PP'];
+      // FIX: Add `spawnWS: null` to the cfg object to satisfy the inferred global type for PP.
+      window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: { spawnWS: null }, state: {}, storage: {} }) as Window['PP'];
       PP.tools = PP.tools || {};
       PP.tools.parabolic = PP.tools.parabolic || {};
 
@@ -2816,7 +2828,8 @@ function initializeVanUi() {
       }
 
       // FIX: Initialize window.PP with required properties to satisfy the global type.
-      window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: {}, state: {}, storage: {} }) as Window['PP'];
+      // FIX: Add `spawnWS: null` to the cfg object to satisfy the inferred global type for PP.
+      window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: { spawnWS: null }, state: {}, storage: {} }) as Window['PP'];
       window.PP.vanUI = {
         show,
         hide,
@@ -3301,7 +3314,8 @@ function initializePs5Controller() {
         };
 
         // FIX: Initialize window.PP with required properties to satisfy the global type.
-        window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: {}, state: {}, storage: {} }) as Window['PP'];
+        // FIX: Add `spawnWS: null` to the cfg object to satisfy the inferred global type for PP.
+        window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: { spawnWS: null }, state: {}, storage: {} }) as Window['PP'];
         window.PP.ps5 = api;
 
         window.addEventListener('pp:start', init, { once: true });
@@ -3407,7 +3421,8 @@ function initializeBootstrap() {
         foundEvidence: new Set(),
     };
     // FIX: Initialize window.PP with required properties to satisfy the global type.
-    window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: {}, state: {}, storage: {} }) as Window['PP'];
+    // FIX: Add `spawnWS: null` to the cfg object to satisfy the inferred global type for PP.
+    window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: { spawnWS: null }, state: {}, storage: {} }) as Window['PP'];
     window.PP.state = Object.assign(window.PP.state || {}, state);
     window.PP.gameHasRenderedFirstFrame = false;
 
