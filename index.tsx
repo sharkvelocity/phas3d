@@ -84,6 +84,8 @@ declare global {
   }
 }
 
+const BASE_URL = "https://sharkvelocity.github.io/3d/";
+
 /**
  * Initializes the global PP settings object.
  * This logic was moved from modular_settings.js to fix a loading error.
@@ -265,7 +267,6 @@ function initializePlayerRigController() {
       const toRad = (d: number) => d * Math.PI / 180;
       const clamp = (v: number,min: number,max: number)=> Math.max(min, Math.min(max,v));
       const cfg = ()=> window.PP?.controls;
-      const BASE_URL = "https://sharkvelocity.github.io/3d/";
     
       const S = {
         rigRoot:null as any, yawNode:null as any, head:null as any, handNode:null as any, body:null as any,
@@ -536,8 +537,6 @@ function initializeGhostLogic() {
     const log = (...a: any[]) => console.log("[GhostLogic]", ...a);
     const warn = (...a: any[]) => console.warn("[GhostLogic]", ...a);
     
-    const BASE_URL = "https://sharkvelocity.github.io/3d/assets/ghosts/";
-
     const GhostLogic = {
         _scene: null as any,
         _isInitialized: false,
@@ -572,7 +571,7 @@ function initializeGhostLogic() {
             this.modelRoot = null;
           }
           
-          const fullUrl = BASE_URL + fileName;
+          const fullUrl = `${BASE_URL}assets/ghosts/${fileName}`;
           log(`Loading ghost model from: ${fullUrl}`);
           
           try {
@@ -921,8 +920,7 @@ function initializeEnvAndSound() {
       window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: {}, state: {}, storage: {} }) as Window['PP'];
       const PP = window.PP;
       PP.audio = PP.audio || {};
-      const BASE_URL = "https://sharkvelocity.github.io/3d/";
-
+      
       PP.audio.gain = { master:1.0, ambient:1.0, sfx:1.0, ui:1.0 };
 
       const A = PP.audio.tracks = {
@@ -1186,8 +1184,7 @@ function initializeMapManager() {
     if(window.PP && window.PP.mapManager) return;
     // FIX: Initialize window.PP with required properties to satisfy the global type.
     window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: {}, state: {}, storage: {} }) as Window['PP'];
-    const BASE_URL = "https://sharkvelocity.github.io/3d/";
-
+    
     let currentMapRoot: any = null;
     const log  = (...a: any[])=>{ try{ console.log("[mapManager]", ...a); }catch{} };
     const warn = (...a: any[])=>{ try{ console.warn("[mapManager]", ...a); }catch{} };
@@ -1383,7 +1380,6 @@ function initializeInventorySystem() {
       // FIX: Initialize window.PP with required properties to satisfy the global type.
       const PP = (window.PP = (window.PP || { GHOST_DATA: null, ALL_EVIDENCE: [], cfg: {}, state: {}, storage: {} })) as Window['PP'];
       PP.inventory = PP.inventory || {};
-      const BASE_URL = "https://sharkvelocity.github.io/3d/";
 
       const ITEM_META = {
         dots:           { id:'dots',           name:'DOTS',           icon: `${BASE_URL}assets/icons/dots.png` },
@@ -1424,7 +1420,7 @@ function initializeUvPrints() {
 
       const SCENE = ()=> window.scene || window.BABYLON.Engine?.LastCreatedScene;
 
-      const TEX = './assets/textures/uv_footprint.png';
+      const TEX = `${BASE_URL}assets/textures/uv_footprint.png`;
       const TTL = 60, FADE = 15, SCALE = 0.45, HEIGHT = 0.02;
 
       let mat: any=null;
@@ -1522,8 +1518,7 @@ function initializeLighter() {
       if (window.LIGHTER) return;
 
       const log = (...a: any[]) => console.log("[Lighter]", ...a);
-      const BASE_URL = "https://sharkvelocity.github.io/3d/";
-
+      
       // FIX: Cast the lighter object to `any` to allow adding properties dynamically.
       const lighter: any = (window.LIGHTER = {
         mesh: null as any,
@@ -1678,7 +1673,7 @@ function initializeLantern() {
           undefined,
           true
         );
-        (lantern.flameTexture as any).fragmentUrl = "./assets/dev/game/flame.fragment.fx";
+        (lantern.flameTexture as any).fragmentUrl = `${BASE_URL}assets/dev/game/flame.fragment.fx`;
 
         lantern.flameMaterial = new window.BABYLON.StandardMaterial("lanternFlameMat", scene);
         lantern.flameMaterial.emissiveTexture = lantern.flameTexture;
@@ -3177,7 +3172,6 @@ function initializeMoon() {
     (function(){
       'use strict';
       if ((window as any).__MoonReady) return; (window as any).__MoonReady = true;
-      const BASE_URL = "https://sharkvelocity.github.io/3d/";
 
       const SCENE = ()=> window.scene || window.BABYLON.Engine?.LastCreatedScene;
 
