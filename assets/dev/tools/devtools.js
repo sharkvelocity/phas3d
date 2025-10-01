@@ -1,3 +1,4 @@
+
 // ./assets/dev/tools/devtools.js — Dev Tools v4 (adds Doors authoring)
 (function(){
   "use strict";
@@ -113,24 +114,36 @@
 
   // ============== TABS ==============
   // Map
-  function buildMapUI(){
-    const row = el('div',{style:{display:'flex', gap:'8px'}},[
-        btn('Generate New Map', async ()=>{ 
-            if (window.MapGenerator) { 
+  function buildMapUI() {
+    const row = el('div', { style: { display: 'flex', gap: '8px' } }, [
+        btn('Generate New Map', async () => {
+            const scene = SCENE();
+            if (window.ProHouseGenerator && scene) {
                 logLine('Generating new procedural map...');
-                await window.MapGenerator.spawnRooms(Date.now());
+                // Attempt to find and dispose of the old map root
+                const oldMap = scene.getTransformNodeByName("ProceduralMapRoot");
+                if (oldMap) {
+                    oldMap.dispose(false, true); // Dispose node and all children
+                    logLine('Cleared previous map.');
+                }
+                await window.ProHouseGenerator.generateMap(scene);
                 logLine('New map generated.');
             } else {
-                logLine('MapGenerator not found.');
+                logLine('ProHouseGenerator not found or scene not ready.');
             }
         }),
-        btn('Clear Log', ()=>{ const o=$('#dev-log'); if(o) o.textContent=''; STATE.loggerLines.length=0; })
+        btn('Clear Log', () => {
+            const o = $('#dev-log');
+            if (o) o.textContent = '';
+            STATE.loggerLines.length = 0;
+        })
     ]);
-    const log = el('pre',{id:'dev-log',style:{background:'#000',border:'1px solid #033',padding:'8px',minHeight:'120px',maxHeight:'220px',overflow:'auto',color:'#8ff',whiteSpace:'pre-wrap'}},[]);
+    const log = el('pre', { id: 'dev-log', style: { background: '#000', border: '1px solid #033', padding: '8px', minHeight: '120px', maxHeight: '220px', overflow: 'auto', color: '#8ff', whiteSpace: 'pre-wrap' } }, []);
     PANEL.body.appendChild(row);
-    PANEL.body.appendChild(el('div',{style:{marginTop:'8px',color:'#8ff'}},["Log:"]));
+    PANEL.body.appendChild(el('div', { style: { marginTop: '8px', color: '#8ff' } }, ["Log:"]));
     PANEL.body.appendChild(log);
-  }
+    log.textContent = STATE.loggerLines.join('\n');
+}
 
   // Nodes
   function buildNodesUI(){

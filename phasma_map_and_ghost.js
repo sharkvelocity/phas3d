@@ -1,3 +1,4 @@
+
 // phasma_map_and_ghost.js
 // Procedural house generator using only primitives and CSG.
 (function(){
@@ -13,7 +14,7 @@
 
   // --- Private Helper Functions ---
 
-  // Creates the CSG box used to cut a doorway out of a wall plane.
+  // Creates the CSG box used to cut a doorway out of a wall.
   function createDoorCutoutBox(scene) {
     const box = BABYLON.MeshBuilder.CreateBox("doorCutout", {
       width: DOOR_WIDTH,
@@ -44,30 +45,32 @@
 
     // --- Walls ---
     const wallDefs = [
-      { name: 'north', hasDoor: roomData.doors.north, pos: new BABYLON.Vector3(0, WALL_HEIGHT / 2, CELL_SIZE / 2), rotY: Math.PI / 2, len: CELL_SIZE },
-      { name: 'south', hasDoor: roomData.doors.south, pos: new BABYLON.Vector3(0, WALL_HEIGHT / 2, -CELL_SIZE / 2), rotY: -Math.PI / 2, len: CELL_SIZE },
-      { name: 'east',  hasDoor: roomData.doors.east,  pos: new BABYLON.Vector3(CELL_SIZE / 2, WALL_HEIGHT / 2, 0), rotY: 0, len: CELL_SIZE },
-      { name: 'west',  hasDoor: roomData.doors.west,  pos: new BABYLON.Vector3(-CELL_SIZE / 2, WALL_HEIGHT / 2, 0), rotY: Math.PI, len: CELL_SIZE },
+      { name: 'north', hasDoor: roomData.doors.north, pos: new BABYLON.Vector3(0, WALL_HEIGHT / 2, CELL_SIZE / 2), rotY: 0, len: CELL_SIZE },
+      { name: 'south', hasDoor: roomData.doors.south, pos: new BABYLON.Vector3(0, WALL_HEIGHT / 2, -CELL_SIZE / 2), rotY: Math.PI, len: CELL_SIZE },
+      { name: 'east',  hasDoor: roomData.doors.east,  pos: new BABYLON.Vector3(CELL_SIZE / 2, WALL_HEIGHT / 2, 0), rotY: Math.PI / 2, len: CELL_SIZE },
+      { name: 'west',  hasDoor: roomData.doors.west,  pos: new BABYLON.Vector3(-CELL_SIZE / 2, WALL_HEIGHT / 2, 0), rotY: -Math.PI / 2, len: CELL_SIZE },
     ];
     
     for (const def of wallDefs) {
-      const wallPlane = BABYLON.MeshBuilder.CreatePlane(`wall_plane_${def.name}`, { width: def.len, height: WALL_HEIGHT }, scene);
-      wallPlane.isVisible = false; // Source for CSG is invisible
-
       let finalWall;
       if (def.hasDoor) {
-        const wallCSG = BABYLON.CSG.FromMesh(wallPlane);
+        const wallBoxSource = BABYLON.MeshBuilder.CreateBox("csg_wall_source", { width: def.len, height: WALL_HEIGHT, depth: WALL_THICKNESS }, scene);
+        wallBoxSource.isVisible = false;
+
         const doorCutoutBox = createDoorCutoutBox(scene);
+        
+        const wallCSG = BABYLON.CSG.FromMesh(wallBoxSource);
         const doorCSG = BABYLON.CSG.FromMesh(doorCutoutBox);
+
         const wallWithDoorCSG = wallCSG.subtract(doorCSG);
+        
         finalWall = wallWithDoorCSG.toMesh(`wall_${def.name}`, materials.wall, scene, true);
+
+        wallBoxSource.dispose();
         doorCutoutBox.dispose();
       } else {
-        finalWall = wallPlane.clone(`wall_${def.name}`);
-        finalWall.isVisible = true;
+        finalWall = BABYLON.MeshBuilder.CreateBox(`wall_${def.name}`, { width: def.len, height: WALL_HEIGHT, depth: WALL_THICKNESS }, scene);
       }
-      
-      wallPlane.dispose();
       
       finalWall.position = def.pos;
       finalWall.rotation.y = def.rotY;
@@ -76,7 +79,7 @@
       finalWall.parent = roomNode;
     }
 
-    const worldPos = new BABYLON.Vector3(gridPos.x * CELL_SIZE + CELL_SIZE/2, 0, gridPos.z * CELL_SIZE + CELL_SIZE/2);
+    const worldPos = new BABYLON.Vector3(gridPos.x * CELL_SIZE, 0, gridPos.z * CELL_SIZE);
     roomNode.position = worldPos;
     return roomNode;
   }

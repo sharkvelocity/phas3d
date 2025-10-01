@@ -279,18 +279,26 @@ async function initialize() {
         
         // This is the gatekeeper. The rest of the game only loads if a frame renders.
         scene.onAfterRenderObservable.addOnce(async () => {
-            log("First frame rendered successfully (Smoke Test Passed).");
-            window.PP.gameHasRenderedFirstFrame = true;
-            clearTimeout(fallbackTimer);
-            
-            // Clean up the debug geometry now that we know the engine works.
-            scene.getMeshByName("debugGround")?.dispose();
-            scene.getMeshByName("debugSphere")?.dispose();
-            scene.getMaterialByName("debugMat")?.dispose();
-            
-            // Now, load the actual game assets.
-            showLoading(true, 20, "Loading Game...", "Smoke test passed.");
-            await startGame('procedural_house');
+            try {
+                log("First frame rendered successfully (Smoke Test Passed).");
+                window.PP.gameHasRenderedFirstFrame = true;
+                clearTimeout(fallbackTimer);
+                
+                // Clean up the debug geometry now that we know the engine works.
+                scene.getMeshByName("debugGround")?.dispose();
+                scene.getMeshByName("debugSphere")?.dispose();
+                scene.getMaterialByName("debugMat")?.dispose();
+                
+                // Now, load the actual game assets.
+                showLoading(true, 20, "Loading Game...", "Smoke test passed.");
+                await startGame('procedural_house');
+            } catch(error) {
+                console.error("CRITICAL FAILURE DURING GAME START:", error);
+                clearTimeout(fallbackTimer);
+                showLoading(false);
+                const fallbackOverlay = document.getElementById('fallback-overlay');
+                if (fallbackOverlay) fallbackOverlay.style.display = 'flex';
+            }
         });
 
     } catch(error) {
