@@ -1,5 +1,5 @@
 {
-  "name": "PhasmaPhoney Investigation",
-  "description": "A 3D ghost-hunting game built with Babylon.js. Investigate haunted locations, gather evidence, and identify supernatural entities.",
+  "name": "PhasmaPhoney",
+  "description": "A 3D ghost hunting investigation game where players must identify paranormal entities using a variety of equipment. The game features procedurally generated house layouts and different weather conditions for a unique experience each time.",
   "requestFramePermissions": []
 }
